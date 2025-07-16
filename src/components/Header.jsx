@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { Moon, Sun, Code } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -8,12 +9,12 @@ const Header = () => {
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity duration-200">
           <Code className="h-8 w-8 text-blue-600" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             DSA Visualizer
           </h1>
-        </div>
+        </Link>
         
         <button
           onClick={toggleTheme}
