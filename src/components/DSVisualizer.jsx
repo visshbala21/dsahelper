@@ -425,31 +425,106 @@ const DSVisualizer = () => {
   )
 
   const renderBinaryTree = () => {
-    const TreeNode = ({ node, level = 0 }) => {
-      if (!node) return null
+    // Calculate positions for nodes
+    const calculatePositions = (node, x = 400, y = 60, level = 0) => {
+      if (!node) return []
       
-      return (
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
-            {node.value}
-          </div>
-          {(node.left || node.right) && (
-            <div className="flex space-x-8 mt-4">
-              <div className="flex flex-col items-center">
-                {node.left && <TreeNode node={node.left} level={level + 1} />}
-              </div>
-              <div className="flex flex-col items-center">
-                {node.right && <TreeNode node={node.right} level={level + 1} />}
-              </div>
-            </div>
-          )}
-        </div>
-      )
+      const positions = [{ ...node, x, y, level }]
+      const horizontalSpacing = Math.max(120 / (level + 1), 60)
+      
+      if (node.left) {
+        positions.push(...calculatePositions(node.left, x - horizontalSpacing, y + 80, level + 1))
+      }
+      if (node.right) {
+        positions.push(...calculatePositions(node.right, x + horizontalSpacing, y + 80, level + 1))
+      }
+      
+      return positions
     }
+
+    const positions = calculatePositions(binaryTree)
+    
+    // Generate edges between parent and child nodes
+    const generateEdges = (node, parentX, parentY) => {
+      if (!node) return []
+      
+      const edges = []
+      const currentPos = positions.find(p => p.value === node.value && p.x && p.y)
+      
+      if (node.left) {
+        const leftPos = positions.find(p => p.value === node.left.value)
+        if (leftPos && currentPos) {
+          edges.push({
+            x1: currentPos.x,
+            y1: currentPos.y + 24, // Offset for node radius
+            x2: leftPos.x,
+            y2: leftPos.y - 24
+          })
+        }
+        edges.push(...generateEdges(node.left, leftPos?.x, leftPos?.y))
+      }
+      
+      if (node.right) {
+        const rightPos = positions.find(p => p.value === node.right.value)
+        if (rightPos && currentPos) {
+          edges.push({
+            x1: currentPos.x,
+            y1: currentPos.y + 24,
+            x2: rightPos.x,
+            y2: rightPos.y - 24
+          })
+        }
+        edges.push(...generateEdges(node.right, rightPos?.x, rightPos?.y))
+      }
+      
+      return edges
+    }
+
+    const edges = generateEdges(binaryTree)
 
     return (
       <div className="flex justify-center py-8">
-        <TreeNode node={binaryTree} />
+        <svg width="800" height="400" className="overflow-visible">
+          {/* Render connecting lines */}
+          {edges.map((edge, index) => (
+            <line
+              key={index}
+              x1={edge.x1}
+              y1={edge.y1}
+              x2={edge.x2}
+              y2={edge.y2}
+              stroke="#6B7280"
+              strokeWidth="2"
+              className="dark:stroke-gray-400"
+            />
+          ))}
+          
+          {/* Render nodes */}
+          {positions.map((pos, index) => (
+            <g key={index}>
+              <circle
+                cx={pos.x}
+                cy={pos.y}
+                r="24"
+                fill="#8B5CF6"
+                stroke="#7C3AED"
+                strokeWidth="2"
+                className="drop-shadow-sm"
+              />
+              <text
+                x={pos.x}
+                y={pos.y}
+                textAnchor="middle"
+                dy="0.35em"
+                fill="white"
+                fontSize="14"
+                fontWeight="bold"
+              >
+                {pos.value}
+              </text>
+            </g>
+          ))}
+        </svg>
       </div>
     )
   }
